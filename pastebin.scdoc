@@ -1,0 +1,19 @@
+YED-PASTEBIN(7)
+
+# NAME
+
+pastebin - Simple plugin for uploading your selection to a pastebin service.
+
+# CONFIGURATION
+None - for now...
+# COMMANDS
+pastebin
+	Uploads selection to pastebin, might look like yed has hanged.
+# BUFFERS
+None.
+# NOTES
+None.
+# VERSION
+None.
+# KEYWORDS
+pastebin, paste, text

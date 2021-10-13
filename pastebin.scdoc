@@ -1,11 +1,15 @@
-YED-PASTEBIN(7)
+YED-PASTEBIN(7) "YED Plugin Manual"
 
 # NAME
 
 pastebin - Simple plugin for uploading your selection to a pastebin service.
 
 # CONFIGURATION
-None - for now...
+pastebin-fav - Specify which service to use, the current options are listed next.
+	- ixio - Uses ix.io
+	- paste-rs - Uses https://paste.rs
+	- dpaste - Uses https://dpaste.org/
+	- mozilla - Uses https://paste.mozilla.org/
 # COMMANDS
 pastebin
 	Uploads selection to pastebin, might look like yed has hanged.
@@ -14,6 +18,6 @@ None.
 # NOTES
 None.
 # VERSION
-None.
+1010.27
 # KEYWORDS
 pastebin, paste, text

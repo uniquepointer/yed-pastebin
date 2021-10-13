@@ -7,6 +7,10 @@ yed_plugin_boot(yed_plugin *self)
 {
     /*Check for plug version*/
     YED_PLUG_VERSION_CHECK();
+    if (yed_get_var("pastebin-fav") == NULL)
+    {
+        yed_set_var("pastebin-fav", "ixio");
+    }
     yed_plugin_set_command(self, "pastebin", pastebin);
     return 0;
 }
@@ -39,9 +43,35 @@ pastebin(int n_args, char **args)
         return;
     }
     char* str2paste = get_sel_text(frame->buffer);
-    snprintf(cmd_buff, sizeof(cmd_buff), "echo '%s' | curl -F 'f:1=<-' ix.io", str2paste);
+    char* service = yed_get_var("pastebin-fav");
+    FILE* fp = fopen("/tmp/pastebintmp", "w+");
+    int i = 0;
+    while(str2paste[i] != '\0')
+    {
+        fputc(str2paste[i], fp);
+        i++;
+    }
+    fclose(fp);
+    if ( strcmp(service, "ixio") == 0)
+    {
+        snprintf(cmd_buff, sizeof(cmd_buff), "cat /tmp/pastebintmp | curl -F 'f:1=<-' ix.io");
+    }
+    else if ( strcmp(service, "paste-rs") == 0)
+    {
+        snprintf(cmd_buff, sizeof(cmd_buff), "cat /tmp/pastebintmp | curl --data-binary @- https://paste.rs/");
+    }
+    else if (strcmp(service, "dpaste") == 0)
+    {
+        snprintf(cmd_buff, sizeof(cmd_buff), "cat /tmp/pastebintmp | curl -F 'format=url' -F 'content=<-' https://dpaste.org/api/");
+    }
+    else if (strcmp(service, "mozilla") == 0)
+    {
+        snprintf(cmd_buff, sizeof(cmd_buff), "cat /tmp/pastebintmp | curl -F 'format=url' -F 'content=<-' https://paste.mozilla.org/api/");
+    }
+
     yed_cprint("Uploading to pastebin service...");
     yed_cerr(yed_run_subproc(cmd_buff, &output_len, &status));
+    remove("/tmp/pastebintmp");
     free(str2paste);
 }
 

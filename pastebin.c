@@ -9,7 +9,7 @@ yed_plugin_boot(yed_plugin *self)
     YED_PLUG_VERSION_CHECK();
     if (yed_get_var("pastebin-fav") == NULL)
     {
-        yed_set_var("pastebin-fav", "ixio");
+        yed_set_var("pastebin-fav", "paste-rs");
     }
     yed_plugin_set_command(self, "pastebin", pastebin);
     return 0;

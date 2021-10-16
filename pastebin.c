@@ -43,6 +43,11 @@ thr_wrap(int n_Args, char** args)
     if (pbmtx_state == 0)
     {
         tret = pthread_create(&pbtr, NULL, pastebin, NULL);
+        if (tret != 0)
+        {
+            yed_cerr("Failed to create thread");
+            return;
+        }
     }
     else
     {

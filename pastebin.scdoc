@@ -12,7 +12,7 @@ pastebin-fav - Specify which service to use, the current options are listed next
 	- mozilla - Uses https://paste.mozilla.org/
 # COMMANDS
 pastebin
-	Uploads selection to pastebin, might look like yed has hanged if it's a slower service like ix.io
+	Uploads selection to pastebin.
 # BUFFERS
 None.
 # NOTES

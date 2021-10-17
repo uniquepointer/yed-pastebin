@@ -54,7 +54,7 @@ pastebin()
     yed_buffer* buff;
 
     int pbmtx_state;
-    int init_mtx_status;
+
     int  output_len, status;
     char cmd_buff[4096];
 

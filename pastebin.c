@@ -19,8 +19,6 @@ yed_plugin_boot(yed_plugin* self)
     return 0;
 }
 
-pthread_mutex_t pbmtx = PTHREAD_MUTEX_INITIALIZER;
-int             pbmtx_state;
 void
 thr_wrap(int n_Args, char** args)
 {
@@ -39,29 +37,27 @@ thr_wrap(int n_Args, char** args)
         yed_cerr("active frame has no buffer");
         return;
     }
-    pbmtx_state = pthread_mutex_trylock(&pbmtx);
-    if (pbmtx_state == 0)
+
+    tret = pthread_create(&pbtr, NULL, pastebin, NULL);
+    if (tret != 0)
     {
-        tret = pthread_create(&pbtr, NULL, pastebin, NULL);
-        if (tret != 0)
-        {
-            yed_cerr("Failed to create thread");
-            return;
-        }
-    }
-    else
-    {
-        yed_cerr("Pastebin currently working");
+        yed_cerr("Failed to create thread");
+        return;
     }
 }
 
+pthread_mutex_t pbmtx = PTHREAD_MUTEX_INITIALIZER;
 void*
 pastebin()
 {
     yed_frame*  frame;
     yed_buffer* buff;
+
+    int pbmtx_state;
+    int init_mtx_status;
     int  output_len, status;
     char cmd_buff[4096];
+
     if (!ys->active_frame)
     {
         yed_cerr("no active frame");
@@ -79,6 +75,14 @@ pastebin()
         yed_cerr("nothing is selected");
         pthread_exit(NULL);
     }
+
+    pbmtx_state = pthread_mutex_trylock(&pbmtx);
+    if (pbmtx_state != 0)
+    {
+        yed_cerr("Pastebin currently working.");
+        pthread_exit(NULL);
+    }
+
     char* str2paste = get_sel_text(frame->buffer);
     char* service   = yed_get_var("pastebin-fav");
     FILE* fp        = fopen("/tmp/pastebintmp", "w+");

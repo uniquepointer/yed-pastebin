@@ -10,6 +10,7 @@ pastebin-fav - Specify which service to use, the current options are listed next
 	- paste-rs - Uses https://paste.rs
 	- dpaste - Uses https://dpaste.org/
 	- mozilla - Uses https://paste.mozilla.org/
+pastebin-url - Variable that shows the last url returned by pastebin.
 # COMMANDS
 pastebin
 	Uploads selection to pastebin.
@@ -18,6 +19,6 @@ None.
 # NOTES
 Defaults to paste.rs
 # VERSION
-1010.27
+1012.83
 # KEYWORDS
 pastebin, paste, text

@@ -15,6 +15,7 @@ yed_plugin_boot(yed_plugin* self)
     {
         yed_set_var("pastebin-fav", "paste-rs");
     }
+    yed_set_var("pastebin-url", "none");
     yed_plugin_set_command(self, "pastebin", thr_wrap);
     return 0;
 }
@@ -117,7 +118,13 @@ pastebin()
                  "https://paste.mozilla.org/api/");
     }
     yed_cprint("Uploading to pastebin service...");
-    yed_cerr(yed_run_subproc(cmd_buff, &output_len, &status));
+    char* pb_url;
+    pb_url = yed_run_subproc(cmd_buff, &output_len, &status);
+    if (pb_url != NULL)
+    {
+        yed_set_var("pastebin-url", pb_url);
+        yed_cerr(pb_url);
+    }
     remove("/tmp/pastebintmp");
     free(str2paste);
     pthread_mutex_unlock(&pbmtx);

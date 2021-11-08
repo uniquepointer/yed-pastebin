@@ -20,18 +20,26 @@ yed_plugin_boot(yed_plugin* self)
     return 0;
 }
 
+struct Params
+{
+    char* str2paste;
+    char* pb_pref;
+};
 void
-thr_wrap(int n_Args, char** args)
+thr_wrap(int n_args, char** args)
 {
     yed_frame*  frame;
     yed_buffer* buffer;
     pthread_t   pbtr;
     int         tret;
+    struct Params* p;
+
     if (!ys->active_frame)
     {
         yed_cerr("no active frame");
         return;
     }
+
     frame = ys->active_frame;
     if (!frame->buffer)
     {
@@ -39,7 +47,18 @@ thr_wrap(int n_Args, char** args)
         return;
     }
 
-    tret = pthread_create(&pbtr, NULL, pastebin, NULL);
+    buffer = frame->buffer;
+    if (!buffer->has_selection)
+    {
+        yed_cerr("nothing is selected");
+        return;
+    }
+
+    p = (struct Params*)malloc(sizeof(struct Params));
+    p->str2paste = get_sel_text(frame->buffer);
+    p->pb_pref = yed_get_var("pastebin-fav");
+
+    tret = pthread_create(&pbtr, NULL, pastebin, p);
     if (tret != 0)
     {
         yed_cerr("Failed to create thread");
@@ -47,88 +66,60 @@ thr_wrap(int n_Args, char** args)
     }
 }
 
-pthread_mutex_t pbmtx = PTHREAD_MUTEX_INITIALIZER;
 void*
-pastebin()
+pastebin(struct Params* p)
 {
-    yed_frame*  frame;
-    yed_buffer* buff;
-
-    int pbmtx_state;
-
-    int  output_len, status;
     char cmd_buff[4096];
 
-    if (!ys->active_frame)
-    {
-        yed_cerr("no active frame");
-        pthread_exit(NULL);
-    }
-    frame = ys->active_frame;
-    if (!frame->buffer)
-    {
-        yed_cerr("active frame has no buffer");
-        pthread_exit(NULL);
-    }
-    buff = frame->buffer;
-    if (!buff->has_selection)
-    {
-        yed_cerr("nothing is selected");
-        pthread_exit(NULL);
-    }
-
-    pbmtx_state = pthread_mutex_trylock(&pbmtx);
-    if (pbmtx_state != 0)
-    {
-        yed_cerr("Pastebin currently working.");
-        pthread_exit(NULL);
-    }
-
-    char* str2paste = get_sel_text(frame->buffer);
-    char* service   = yed_get_var("pastebin-fav");
-    FILE* fp        = fopen("/tmp/pastebintmp", "w+");
-    int   i         = 0;
-    while (str2paste[i] != '\0')
-    {
-        fputc(str2paste[i], fp);
-        i++;
-    }
-    fclose(fp);
-    if (strcmp(service, "ixio") == 0)
+    if (strcmp(p->pb_pref, "ixio") == 0)
     {
         snprintf(cmd_buff, sizeof(cmd_buff),
-                 "cat /tmp/pastebintmp | curl -F 'f:1=<-' ix.io");
+                 "curl -F 'f:1=<-' ix.io > /tmp/lXSdHQ");
     }
-    else if (strcmp(service, "paste-rs") == 0)
+    else if (strcmp(p->pb_pref, "paste-rs") == 0)
     {
         snprintf(
                     cmd_buff, sizeof(cmd_buff),
-                    "cat /tmp/pastebintmp | curl --data-binary @- https://paste.rs/");
+                    "curl --data-binary @- https://paste.rs/ > /tmp/lXSdHQ");
     }
-    else if (strcmp(service, "dpaste") == 0)
+    else if (strcmp(p->pb_pref, "dpaste") == 0)
     {
         snprintf(cmd_buff, sizeof(cmd_buff),
-                 "cat /tmp/pastebintmp | curl -F 'format=url' -F 'content=<-' "
-                 "https://dpaste.org/api/");
+                 "curl -F 'format=url' -F 'content=<-' "
+                 "https://dpaste.org/api/ > /tmp/lXSdHQ");
     }
-    else if (strcmp(service, "mozilla") == 0)
+    else if (strcmp(p->pb_pref, "mozilla") == 0)
     {
         snprintf(cmd_buff, sizeof(cmd_buff),
-                 "cat /tmp/pastebintmp | curl -F 'format=url' -F 'content=<-' "
-                 "https://paste.mozilla.org/api/");
+                 "curl -F 'format=url' -F 'content=<-' "
+                 "https://paste.mozilla.org/api/ > /tmp/lXSdHQ");
     }
-    yed_cprint("Uploading to pastebin service...");
+
+    int  output_len, status;
+    FILE* pb_pipe;
+
+    if ((pb_pipe = popen(cmd_buff, "w")) == NULL)
+    {
+        pthread_exit(NULL);
+    }
+    fprintf(pb_pipe, "%s", p->str2paste);
+    pclose(pb_pipe);
+
+    char url[1024];
+    snprintf(url, sizeof(url), "cat /tmp/lXSdHQ");
+
     char* pb_url;
-    pb_url = yed_run_subproc(cmd_buff, &output_len, &status);
+    pb_url = yed_run_subproc(url, &output_len, &status);
     if (pb_url != NULL)
     {
         yed_set_var("pastebin-url", pb_url);
         yed_cerr(pb_url);
     }
-    remove("/tmp/pastebintmp");
-    free(str2paste);
-    pthread_mutex_unlock(&pbmtx);
-    pthread_exit(NULL);
+
+    free(p->str2paste);
+    free(p);
+    remove("/tmp/lXSdHQ");
+    return (NULL);
 }
 
 /* ty kammer */

@@ -94,6 +94,10 @@ pastebin(struct Params* p)
                  "curl -F 'format=url' -F 'content=<-' "
                  "https://paste.mozilla.org/api/ > /tmp/lXSdHQ");
     }
+    else
+    {
+        snprintf(cmd_buff, sizeof(cmd_buff), "%s > /tmp/lXSdHQ", p->pb_pref);
+    }
 
     int  output_len, status;
     FILE* pb_pipe;
@@ -112,7 +116,7 @@ pastebin(struct Params* p)
     pb_url = yed_run_subproc(url, &output_len, &status);
     if (pb_url != NULL)
     {
-        yed_set_var("pastebin-url", pb_url);
+        //TODO: find a way to save the pb_url to the variable in the main thread
         yed_cerr(pb_url);
     }
 
